@@ -2,6 +2,15 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +27,6 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  user: Omit<User, 'password'>;
+  user: UserResponse;
   token: string;
 } 

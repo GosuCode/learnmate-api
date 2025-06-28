@@ -1,5 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { appConfig } from '../config';
+import { UserService } from '../services/userService';
+
+const userService = new UserService();
 
 export async function authenticate(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -15,24 +17,32 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
     
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
-    // TODO: Implement JWT verification
-    // - Verify token signature
-    // - Check token expiration
-    // - Extract user information
+    // Verify JWT token
+    const decoded = userService.verifyToken(token);
     
-    // For now, just check if token exists
-    if (!token) {
+    if (!decoded) {
       return reply.status(401).send({
         success: false,
         error: 'Unauthorized',
-        message: 'Invalid token',
+        message: 'Invalid or expired token',
+      });
+    }
+
+    // Verify user exists
+    const user = await userService.getUserById(decoded.userId);
+    if (!user) {
+      return reply.status(401).send({
+        success: false,
+        error: 'Unauthorized',
+        message: 'User not found',
       });
     }
     
     // Add user info to request for use in controllers
     (request as any).user = {
-      id: 'temp-user-id',
-      email: 'user@example.com',
+      userId: user.id,
+      email: user.email,
+      name: user.name,
     };
     
   } catch (error) {

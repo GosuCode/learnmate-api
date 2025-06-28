@@ -1,35 +1,51 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { CreateUserRequest, LoginRequest, AuthResponse } from "../types/user";
 import { ApiResponse } from "../types/api";
+import { UserService } from "../services/userService";
+
+const userService = new UserService();
 
 export const userController = {
   async register(request: FastifyRequest<{ Body: CreateUserRequest }>, reply: FastifyReply) {
     try {
       const { email, name, password } = request.body;
       
-      // TODO: Implement user registration logic
-      // - Hash password
-      // - Check if user already exists
-      // - Create user in database
-      // - Generate JWT token
+      // Validate input
+      if (!email || !name || !password) {
+        return reply.status(400).send({
+          success: false,
+          error: 'Validation error',
+          message: 'Email, name, and password are required',
+        });
+      }
+
+      if (password.length < 6) {
+        return reply.status(400).send({
+          success: false,
+          error: 'Validation error',
+          message: 'Password must be at least 6 characters long',
+        });
+      }
+
+      // Register user
+      const authResponse = await userService.register({ email, name, password });
       
       const response: ApiResponse<AuthResponse> = {
         success: true,
-        data: {
-          user: {
-            id: 'temp-id',
-            email,
-            name,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          token: 'temp-jwt-token',
-        },
+        data: authResponse,
         message: 'User registered successfully',
       };
       
       return reply.status(201).send(response);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === 'User already exists with this email') {
+        return reply.status(409).send({
+          success: false,
+          error: 'Conflict',
+          message: error.message,
+        });
+      }
+
       return reply.status(500).send({
         success: false,
         error: 'Internal server error',
@@ -42,27 +58,34 @@ export const userController = {
     try {
       const { email, password } = request.body;
       
-      // TODO: Implement login logic
-      // - Verify user credentials
-      // - Generate JWT token
+      // Validate input
+      if (!email || !password) {
+        return reply.status(400).send({
+          success: false,
+          error: 'Validation error',
+          message: 'Email and password are required',
+        });
+      }
+
+      // Login user
+      const authResponse = await userService.login({ email, password });
       
       const response: ApiResponse<AuthResponse> = {
         success: true,
-        data: {
-          user: {
-            id: 'temp-id',
-            email,
-            name: 'User Name',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          token: 'temp-jwt-token',
-        },
+        data: authResponse,
         message: 'Login successful',
       };
       
       return reply.send(response);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === 'Invalid email or password') {
+        return reply.status(401).send({
+          success: false,
+          error: 'Unauthorized',
+          message: error.message,
+        });
+      }
+
       return reply.status(500).send({
         success: false,
         error: 'Internal server error',
@@ -73,16 +96,35 @@ export const userController = {
 
   async getProfile(request: FastifyRequest, reply: FastifyReply) {
     try {
-      // TODO: Get user from JWT token
+      // Get user from JWT token (set by auth middleware)
+      const user = (request as any).user;
       
+      if (!user) {
+        return reply.status(401).send({
+          success: false,
+          error: 'Unauthorized',
+          message: 'User not authenticated',
+        });
+      }
+
+      const userData = await userService.getUserById(user.userId);
+      
+      if (!userData) {
+        return reply.status(404).send({
+          success: false,
+          error: 'Not found',
+          message: 'User not found',
+        });
+      }
+
       const response: ApiResponse = {
         success: true,
         data: {
-          id: 'temp-id',
-          email: 'user@example.com',
-          name: 'User Name',
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          createdAt: userData.createdAt,
+          updatedAt: userData.updatedAt,
         },
         message: 'Profile retrieved successfully',
       };
