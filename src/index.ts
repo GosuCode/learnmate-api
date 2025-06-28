@@ -1,11 +1,23 @@
 import app from "./app";
+import { appConfig } from "./config";
 
-const FASTIFY_PORT = Number(process.env.FASTIFY_PORT) || 3006;
+async function start() {
+  try {
+    await app.listen({ 
+      port: appConfig.port, 
+      host: appConfig.host 
+    });
+    
+    console.log(`🚀 LearnMate Backend server running on http://${appConfig.host}:${appConfig.port}`);
+    console.log(`Environment: ${appConfig.nodeEnv}`);
+    console.log(`API Routes:`);
+    console.log(`  - Users: /api/users`);
+    console.log(`  - Content: /api/content`);
+    console.log(`  - AI Services: /api/ai`);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
 
-app.listen({ port: FASTIFY_PORT });
-
-console.log(
-  `🚀  Fastify server running on port http://localhost:${FASTIFY_PORT}`,
-);
-console.log(`Route index: /`);
-console.log(`Route user: /api/v1/user`);
+start();

@@ -1,12 +1,27 @@
 import fastify from "fastify";
-import router from "./router";
+import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import { appConfig } from "./config";
+import registerRoutes from "./routes";
+import authPlugin from "./plugins/auth";
 
 const server = fastify({
   // Logger only for production
-  logger: !!(process.env.NODE_ENV !== "development"),
+  logger: appConfig.nodeEnv === 'production',
 });
 
-// Middleware: Router
-server.register(router);
+// Register plugins
+server.register(cors, {
+  origin: appConfig.cors.origin,
+  credentials: appConfig.cors.credentials,
+});
+
+server.register(helmet);
+
+// Register authentication plugin
+server.register(authPlugin);
+
+// Register routes
+server.register(registerRoutes);
 
 export default server;
