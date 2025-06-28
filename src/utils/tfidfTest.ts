@@ -58,4 +58,4 @@ export function testTFIDF() {
 // Run test if this file is executed directly
 if (require.main === module) {
   testTFIDF();
-} 
+}

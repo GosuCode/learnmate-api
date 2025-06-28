@@ -117,4 +117,4 @@ export class AIService {
     // Return top 3 categories or default to 'General'
     return categories.slice(0, 3).length > 0 ? categories.slice(0, 3) : ['General'];
   }
-} 
+}
