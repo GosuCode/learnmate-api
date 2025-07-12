@@ -2,7 +2,7 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import { appConfig } from "./config";
-import registerRoutes from "./routes";
+// import registerRoutes from "./routes";
 import authPlugin from "./plugins/auth";
 
 const server = fastify({
@@ -22,6 +22,6 @@ server.register(helmet);
 server.register(authPlugin);
 
 // Register routes
-server.register(registerRoutes);
+// server.register(registerRoutes);
 
 export default server;
