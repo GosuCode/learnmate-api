@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-$ git clone https://github.com/Matschik/fastify-typescript-starter.git
+$ git clone https://github.com/GosuCode/fastify-typescript-starter.git
 $ cd fastify-typescript-starter
 $ npm run install
 ```
@@ -13,6 +13,7 @@ $ npm run install
 ## Usage
 
 ### Development
+
 ```bash
 # Required: typescript watch compilation
 $ npm run watch

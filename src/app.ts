@@ -2,15 +2,22 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import { appConfig } from "./config";
-// import registerRoutes from "./routes";
-import authPlugin from "./plugins/auth";
+import registerRoutes from "./routes";
 
 const server = fastify({
   // Logger only for production
   logger: appConfig.nodeEnv === 'production',
 });
 
-// Register plugins
+const listeners = ['SIGINT', 'SIGTERM'];
+listeners.forEach(signal => {
+  process.on(signal, () => {
+    server.close(() => {
+      process.exit(0);
+    });
+  });
+});
+
 server.register(cors, {
   origin: appConfig.cors.origin,
   credentials: appConfig.cors.credentials,
@@ -18,10 +25,7 @@ server.register(cors, {
 
 server.register(helmet);
 
-// Register authentication plugin
-server.register(authPlugin);
-
 // Register routes
-// server.register(registerRoutes);
+server.register(registerRoutes);
 
 export default server;

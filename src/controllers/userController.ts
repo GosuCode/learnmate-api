@@ -9,7 +9,7 @@ export const userController = {
   async register(request: FastifyRequest<{ Body: CreateUserRequest }>, reply: FastifyReply) {
     try {
       const { email, name, password } = request.body;
-      
+
       // Validate input
       if (!email || !name || !password) {
         return reply.status(400).send({
@@ -29,13 +29,13 @@ export const userController = {
 
       // Register user
       const authResponse = await userService.register({ email, name, password });
-      
+
       const response: ApiResponse<AuthResponse> = {
         success: true,
         data: authResponse,
         message: 'User registered successfully',
       };
-      
+
       return reply.status(201).send(response);
     } catch (error: any) {
       if (error.message === 'User already exists with this email') {
@@ -57,7 +57,7 @@ export const userController = {
   async login(request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) {
     try {
       const { email, password } = request.body;
-      
+
       // Validate input
       if (!email || !password) {
         return reply.status(400).send({
@@ -69,13 +69,13 @@ export const userController = {
 
       // Login user
       const authResponse = await userService.login({ email, password });
-      
+
       const response: ApiResponse<AuthResponse> = {
         success: true,
         data: authResponse,
         message: 'Login successful',
       };
-      
+
       return reply.send(response);
     } catch (error: any) {
       if (error.message === 'Invalid email or password') {
@@ -98,7 +98,7 @@ export const userController = {
     try {
       // Get user from JWT token (set by auth middleware)
       const user = (request as any).user;
-      
+
       if (!user) {
         return reply.status(401).send({
           success: false,
@@ -108,7 +108,7 @@ export const userController = {
       }
 
       const userData = await userService.getUserById(user.userId);
-      
+
       if (!userData) {
         return reply.status(404).send({
           success: false,
@@ -128,13 +128,33 @@ export const userController = {
         },
         message: 'Profile retrieved successfully',
       };
-      
+
       return reply.send(response);
     } catch (error) {
       return reply.status(500).send({
         success: false,
         error: 'Internal server error',
         message: 'Failed to get profile',
+      });
+    }
+  },
+
+  async getAllUsers(_request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const users = await userService.getAllUsers();
+
+      const response: ApiResponse = {
+        success: true,
+        data: users,
+        message: 'Users retrieved successfully',
+      };
+
+      return reply.send(response);
+    } catch (error) {
+      return reply.status(500).send({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to get users',
       });
     }
   },

@@ -2,45 +2,32 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User, CreateUserRequest, LoginRequest, AuthResponse } from '../types/user';
 import { appConfig } from '../config';
+import { prisma } from '../lib/prisma';
 
 export class UserService {
-  private users: Map<string, User> = new Map(); // In-memory storage for demo
-
-  constructor() {
-    // Initialize with a demo user
-    this.users.set('demo@example.com', {
-      id: '1',
-      email: 'demo@example.com',
-      name: 'Demo User',
-      password: bcrypt.hashSync('password123', 10),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-  }
-
   async register(userData: CreateUserRequest): Promise<AuthResponse> {
     const { email, name, password } = userData;
 
     // Check if user already exists
-    if (this.users.has(email)) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
       throw new Error('User already exists with this email');
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
-    const newUser: User = {
-      id: this.generateId(),
-      email,
-      name,
-      password: hashedPassword,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    // Store user
-    this.users.set(email, newUser);
+    // Create new user in database
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        name,
+        password: hashedPassword,
+      }
+    });
 
     // Generate JWT token
     const token = this.generateToken(newUser);
@@ -60,8 +47,11 @@ export class UserService {
   async login(loginData: LoginRequest): Promise<AuthResponse> {
     const { email, password } = loginData;
 
-    // Find user
-    const user = this.users.get(email);
+    // Find user in database
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
     if (!user) {
       throw new Error('Invalid email or password');
     }
@@ -88,16 +78,33 @@ export class UserService {
   }
 
   async getUserById(userId: string): Promise<User | null> {
-    for (const user of this.users.values()) {
-      if (user.id === userId) {
-        return user;
-      }
-    }
-    return null;
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    return this.users.get(email) || null;
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    return user;
+  }
+
+  async getAllUsers(): Promise<Omit<User, 'password'>[]> {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    return users;
   }
 
   verifyToken(token: string): { userId: string; email: string } | null {
@@ -119,10 +126,10 @@ export class UserService {
       name: user.name,
     };
 
-    return jwt.sign(payload, appConfig.jwt.secret);
-  }
+    if (!appConfig.jwt.secret) {
+      throw new Error('JWT secret is not configured');
+    }
 
-  private generateId(): string {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    return jwt.sign(payload, appConfig.jwt.secret);
   }
 } 
