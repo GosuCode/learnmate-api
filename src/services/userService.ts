@@ -30,13 +30,16 @@ export class UserService {
     });
 
     // Generate JWT token
-    const token = this.generateToken(newUser);
+    const token = this.generateToken(newUser.id);
 
     return {
       user: {
         id: newUser.id,
         email: newUser.email,
         name: newUser.name,
+        avatar: newUser.avatar,
+        authProvider: newUser.authProvider,
+        emailVerified: newUser.emailVerified,
         createdAt: newUser.createdAt,
         updatedAt: newUser.updatedAt,
       },
@@ -57,19 +60,26 @@ export class UserService {
     }
 
     // Verify password
+    if (!user.password) {
+      throw new Error('Invalid email or password');
+    }
+
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       throw new Error('Invalid email or password');
     }
 
     // Generate JWT token
-    const token = this.generateToken(user);
+    const token = this.generateToken(user.id);
 
     return {
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
+        avatar: user.avatar,
+        authProvider: user.authProvider,
+        emailVerified: user.emailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -99,6 +109,9 @@ export class UserService {
         id: true,
         email: true,
         name: true,
+        avatar: true,
+        authProvider: true,
+        emailVerified: true,
         createdAt: true,
         updatedAt: true,
       }
@@ -119,11 +132,9 @@ export class UserService {
     }
   }
 
-  private generateToken(user: User): string {
+  public generateToken(userId: string): string {
     const payload = {
-      userId: user.id,
-      email: user.email,
-      name: user.name,
+      userId: userId,
     };
 
     if (!appConfig.jwt.secret) {
