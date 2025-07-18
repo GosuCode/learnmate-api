@@ -13,7 +13,7 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-  port: parseInt(process.env.PORT || '3000'),
+  port: parseInt(process.env.PORT || '9000'),
   host: process.env.HOST || '0.0.0.0',
   nodeEnv: process.env.NODE_ENV || 'development',
   cors: {
