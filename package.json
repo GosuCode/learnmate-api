@@ -6,8 +6,8 @@
     "watch": "tsc --watch --preserveWatchOutput --pretty",
     "dev": "npm run build && cross-env NODE_ENV=development nodemon",
     "format": "prettier --write \"src/**/*.ts\"",
-    "build": "rimraf dist && tsc",
-    "start": "node dist/index.js",
+    "build": "rimraf dist && tsc && tsc-alias",
+    "start": "node -r tsconfig-paths/register dist/index.js",
     "db:push": "DATABASE_URL=\"postgresql://postgres:password@localhost:5432/learnmate\" npx prisma db push",
     "db:generate": "npx prisma generate",
     "db:studio": "DATABASE_URL=\"postgresql://postgres:password@localhost:5432/learnmate\" npx prisma studio",
@@ -41,6 +41,7 @@
     "prettier": "^3.6.1",
     "rimraf": "^5.0.7",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.2"
   }
