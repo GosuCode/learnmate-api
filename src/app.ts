@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import { appConfig } from "./config";
 import registerRoutes from "./routes";
+import authPlugin from "./plugins/auth";
 
 const server = fastify({
   // Logger only for production
@@ -24,6 +25,9 @@ server.register(cors, {
 });
 
 server.register(helmet);
+
+// Register authentication plugin
+server.register(authPlugin);
 
 // Register routes
 server.register(registerRoutes);

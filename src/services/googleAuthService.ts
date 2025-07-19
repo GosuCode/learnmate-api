@@ -1,6 +1,6 @@
 import { OAuth2Client } from 'google-auth-library';
-import { prisma } from '../lib/prisma';
-import { UserService } from './userService';
+import { prisma } from '@/lib/prisma';
+import { UserService } from '@/services/userService';
 
 export interface GoogleUserInfo {
     sub: string; // Google ID

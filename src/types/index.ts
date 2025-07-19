@@ -1,6 +1,6 @@
-export * from './user';
-export * from './content';
-export * from './api';
+export * from '@/types/user';
+export * from '@/types/content';
+export * from '@/types/api';
 
 // Extend FastifyInstance to include authenticate method
 declare module 'fastify' {

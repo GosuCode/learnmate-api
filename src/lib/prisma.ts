@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { getSessionPoolerConfig } from '../config/database';
+import { getSessionPoolerConfig } from '@/config/database';
 
 declare global {
     var __prisma: PrismaClient | undefined;

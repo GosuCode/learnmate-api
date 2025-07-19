@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { GoogleAuthService } from '../services/googleAuthService';
-import { ApiResponse } from '../types/api';
+import { GoogleAuthService } from '@/services/googleAuthService';
+import { ApiResponse } from '@/types/api';
 
 const googleAuthService = new GoogleAuthService();
 

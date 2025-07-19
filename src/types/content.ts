@@ -16,19 +16,32 @@ export interface CreateContentRequest {
   category?: string;
 }
 
-export interface Summary {
-  id: string;
-  contentId: string;
-  summary: string;
-  keyPoints: string[];
-  createdAt: Date;
+export interface UpdateContentRequest {
+  title?: string;
+  content?: string;
+  type?: 'text' | 'pdf' | 'url';
+  category?: string;
 }
 
-export interface Quiz {
-  id: string;
-  contentId: string;
+export interface AIServiceRequest {
+  content: string;
+  type: 'summary' | 'quiz' | 'categorize';
+  options?: {
+    maxLength?: number;
+    difficulty?: 'easy' | 'medium' | 'hard';
+    numQuestions?: number;
+  };
+}
+
+export interface SummaryResponse {
+  summary: string;
+  keyPoints: string[];
+  wordCount: number;
+}
+
+export interface QuizResponse {
   questions: QuizQuestion[];
-  createdAt: Date;
+  totalQuestions: number;
 }
 
 export interface QuizQuestion {
@@ -36,4 +49,9 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number;
   explanation?: string;
+}
+
+export interface CategorizeResponse {
+  categories: string[];
+  confidence: number;
 } 
