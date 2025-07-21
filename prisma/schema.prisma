@@ -19,10 +19,35 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  // Relations
   contents Content[]
 
   @@map("users")
+}
+
+model Course {
+  id          String    @id @default(uuid())
+  slug        String    @unique
+  name        String
+  semester    Int
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  chapters    Chapter[] // Relation to chapters/units
+}
+
+model Chapter {
+  id            String   @id @default(uuid())
+  course        Course   @relation(fields: [courseId], references: [id])
+  courseId      String
+  chapterNumber Int
+  slug          String
+  title         String
+  content       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([courseId, chapterNumber])
+  @@unique([courseId, slug])
 }
 
 model Content {
