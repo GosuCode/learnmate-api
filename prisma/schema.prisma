@@ -24,44 +24,66 @@ model User {
   @@map("users")
 }
 
-model Course {
-  id          String    @id @default(uuid())
-  slug        String    @unique
-  name        String
-  semester    Int
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  chapters    Chapter[] // Relation to chapters/units
+model Semester {
+  id        String    @id @default(cuid())
+  name      String
+  code      String    @unique // e.g., "SEM1"
+  subjects  Subject[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
-model Chapter {
-  id            String   @id @default(uuid())
-  course        Course   @relation(fields: [courseId], references: [id])
-  courseId      String
-  chapterNumber Int
-  slug          String
-  title         String
-  content       String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@unique([courseId, chapterNumber])
-  @@unique([courseId, slug])
+model Subject {
+  id         String    @id @default(cuid())
+  name       String
+  code       String    @unique // e.g., "CACS141"
+  semester   Semester  @relation(fields: [semesterId], references: [id])
+  semesterId String
+  contents   Content[] // chapters, topics, summaries
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model Content {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  content   String   @db.Text
-  type      String // 'text' | 'pdf' | 'url'
-  category  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String         @id @default(cuid())
+  title       String
+  slug        String         @unique
+  type        ContentType
+  description String?
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  subjectId   String
+  parent      Content?       @relation("ContentToContent", fields: [parentId], references: [id])
+  parentId    String?
+  children    Content[]      @relation("ContentToContent")
+  blocks      ContentBlock[]
+  tags        String[]
+  published   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdById String
+  createdBy   User           @relation(fields: [createdById], references: [id])
+}
 
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model ContentBlock {
+  id        String    @id @default(cuid())
+  type      BlockType
+  text      String?
+  fileUrl   String? // e.g., PDF, image, video
+  order     Int
+  contentId String
+  content   Content   @relation(fields: [contentId], references: [id])
+}
 
-  @@map("contents")
+enum ContentType {
+  course
+  chapter
+  topic
+}
+
+enum BlockType {
+  text
+  pdf
+  image
+  video
+  code
 }
