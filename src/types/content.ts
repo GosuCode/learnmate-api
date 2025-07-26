@@ -1,19 +1,27 @@
 export interface Content {
   id: string;
-  userId: string;
   title: string;
-  content: string;
-  type: 'text' | 'pdf' | 'url';
-  category?: string;
+  slug: string;
+  type: 'TEXT' | 'PDF' | 'URL';
+  description?: string;
+  subjectId: string;
+  parentId?: string | null;
+  tags: string[];
+  published: boolean;
   createdAt: Date;
   updatedAt: Date;
+  createdById: string;
 }
 
 export interface CreateContentRequest {
   title: string;
-  content: string;
-  type: 'text' | 'pdf' | 'url';
-  category?: string;
+  slug: string;
+  type: 'TEXT' | 'PDF' | 'URL';
+  description?: string;
+  subjectId: string;
+  parentId?: string | null;
+  tags?: string[];
+  published?: boolean;
 }
 
 export interface UpdateContentRequest {

@@ -26,8 +26,8 @@ model User {
 
 model Semester {
   id        String    @id @default(cuid())
-  name      String
-  code      String    @unique // e.g., "SEM1"
+  name      String    @unique
+  code      String    @unique //eg: SEM1
   subjects  Subject[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -35,8 +35,8 @@ model Semester {
 
 model Subject {
   id         String    @id @default(cuid())
-  name       String
-  code       String    @unique // e.g., "CACS141"
+  name       String    @unique
+  code       String    @unique
   semester   Semester  @relation(fields: [semesterId], references: [id])
   semesterId String
   contents   Content[] // chapters, topics, summaries

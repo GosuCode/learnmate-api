@@ -120,6 +120,30 @@ export class UserService {
     return users;
   }
 
+  async updatePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { password: true }
+    });
+
+    if (!user || !user.password) {
+      throw new Error('User not found or password not set');
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      throw new Error('Old password is incorrect');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword }
+    });
+  }
+
+
   verifyToken(token: string): { userId: string; email: string } | null {
     try {
       const decoded = jwt.verify(token, appConfig.jwt.secret) as any;
