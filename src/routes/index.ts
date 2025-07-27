@@ -5,6 +5,7 @@ import healthCheckRoute from './healthcheck.route';
 import semesterRoutes from './semesterRoute';
 import subjectRoutes from './subjectRoute';
 import contentRoutes from './contentRoute';
+import summarizeRoutes from './summarizeRoute';
 
 export default async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(healthCheckRoute, { prefix: '/api' });
@@ -13,4 +14,5 @@ export default async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(semesterRoutes, { prefix: '/api/semester' });
   await fastify.register(subjectRoutes, { prefix: '/api/subject' });
   await fastify.register(contentRoutes, { prefix: '/api/content' });
+  await fastify.register(summarizeRoutes, { prefix: '/api/summarize' });
 }
