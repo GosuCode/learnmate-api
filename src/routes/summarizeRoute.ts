@@ -14,7 +14,7 @@ export default async function summarizeRoutes(app: FastifyInstance) {
         }
 
         try {
-            const response = await axios.post("http://localhost:8000/summarize", {
+            const response = await axios.post("http://localhost:8000/api/v1/summarize", {
                 text,
                 max_length,
                 num_beams,
