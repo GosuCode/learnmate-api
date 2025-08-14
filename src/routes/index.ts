@@ -7,6 +7,7 @@ import subjectRoutes from './subjectRoute';
 import contentRoutes from './contentRoute';
 import summarizeRoutes from './summarizeRoute';
 import mcqRoutes from './mcqRoute';
+import fileProcessingRoutes from './fileProcessingRoute';
 
 export default async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(healthCheckRoute, { prefix: '/api' });
@@ -17,4 +18,5 @@ export default async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(contentRoutes, { prefix: '/api/content' });
   await fastify.register(summarizeRoutes, { prefix: '/api/summarize' });
   await fastify.register(mcqRoutes, { prefix: '/api/mcq' });
+  await fastify.register(fileProcessingRoutes, { prefix: '/api/files' });
 }
