@@ -14,12 +14,13 @@ model User {
   password      String?
   googleId      String?  @unique
   avatar        String?
-  authProvider  String   @default("local") // "local" or "google"
+  authProvider  String   @default("local")
   emailVerified Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  contents Content[]
+  contents   Content[]
+  flashcards Flashcard[]
 
   @@map("users")
 }
@@ -27,21 +28,21 @@ model User {
 model Semester {
   id        String    @id @default(cuid())
   name      String    @unique
-  code      String    @unique //eg: SEM1
-  subjects  Subject[]
+  code      String    @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  subjects  Subject[]
 }
 
 model Subject {
   id         String    @id @default(cuid())
   name       String    @unique
   code       String    @unique
-  semester   Semester  @relation(fields: [semesterId], references: [id])
   semesterId String
-  contents   Content[] // chapters, topics, summaries
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  contents   Content[]
+  semester   Semester  @relation(fields: [semesterId], references: [id])
 }
 
 model Content {
@@ -50,17 +51,17 @@ model Content {
   slug        String         @unique
   type        ContentType
   description String?
-  subject     Subject        @relation(fields: [subjectId], references: [id])
   subjectId   String
-  parent      Content?       @relation("ContentToContent", fields: [parentId], references: [id])
   parentId    String?
-  children    Content[]      @relation("ContentToContent")
-  blocks      ContentBlock[]
   tags        String[]
   published   Boolean        @default(false)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   createdById String
+  parent      Content?       @relation("ContentToContent", fields: [parentId], references: [id])
+  children    Content[]      @relation("ContentToContent")
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  blocks      ContentBlock[]
   createdBy   User           @relation(fields: [createdById], references: [id])
 }
 
@@ -68,10 +69,31 @@ model ContentBlock {
   id        String    @id @default(cuid())
   type      BlockType
   text      String?
-  fileUrl   String? // e.g., PDF, image, video
+  fileUrl   String?
   order     Int
   contentId String
   content   Content   @relation(fields: [contentId], references: [id])
+}
+
+model Flashcard {
+  id           String   @id @default(cuid())
+  front        String
+  back         String
+  easeFactor   Float    @default(2.5)
+  interval     Int      @default(0)
+  repetition   Int      @default(0)
+  lastReviewed DateTime @default(now())
+  nextReview   DateTime @default(now())
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([nextReview])
+  @@index([userId, nextReview])
+  @@map("flashcards")
 }
 
 enum ContentType {
