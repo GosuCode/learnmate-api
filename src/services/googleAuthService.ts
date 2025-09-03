@@ -89,7 +89,7 @@ export class GoogleAuthService {
             }
 
             // Generate JWT token for the user
-            const token = this.userService.generateToken(user.id);
+            const token = this.userService.generateToken(user.id, user.email);
 
             return {
                 user: {

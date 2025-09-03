@@ -30,7 +30,7 @@ export class UserService {
     });
 
     // Generate JWT token
-    const token = this.generateToken(newUser.id);
+    const token = await this.generateToken(newUser.id, newUser.email);
 
     return {
       user: {
@@ -70,7 +70,7 @@ export class UserService {
     }
 
     // Generate JWT token
-    const token = this.generateToken(user.id);
+    const token = await this.generateToken(user.id, user.email);
 
     return {
       user: {
@@ -143,28 +143,31 @@ export class UserService {
     });
   }
 
-
   verifyToken(token: string): { userId: string; email: string } | null {
     try {
       const decoded = jwt.verify(token, appConfig.jwt.secret) as any;
       return {
-        userId: decoded.userId,
+        userId: decoded.userId || decoded.id, // Handle both userId and id
         email: decoded.email,
       };
     } catch (error) {
+      console.error('Token verification failed:', error);
       return null;
     }
   }
 
-  public generateToken(userId: string): string {
+  public async generateToken(userId: string, email: string): Promise<string> {
     const payload = {
       userId: userId,
+      email: email,
     };
 
     if (!appConfig.jwt.secret) {
       throw new Error('JWT secret is not configured');
     }
 
-    return jwt.sign(payload, appConfig.jwt.secret);
+    return jwt.sign(payload, appConfig.jwt.secret as string, {
+      expiresIn: '24h'
+    });
   }
-} 
+}

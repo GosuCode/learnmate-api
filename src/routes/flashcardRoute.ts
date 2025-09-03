@@ -5,7 +5,6 @@ import { sm2Service } from '@/services/sm2Service';
 import { prisma } from '@/lib/prisma';
 import { authenticate } from '@/middleware/auth';
 
-// Request/Response schemas
 const FlashcardRequestSchema = z.object({
     text: z.string().min(50, 'Text must be at least 50 characters long'),
     total_questions: z.number().int().min(1).max(10).default(3)
@@ -25,39 +24,7 @@ type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
 type CreateFlashcard = z.infer<typeof CreateFlashcardSchema>;
 
 export default async function flashcardRoutes(fastify: FastifyInstance) {
-    // Health check
-    fastify.get('/health', async () => {
-        const fastapiServiceHealthy = await flashcardService.checkFastAPIServiceHealth();
-        const serviceInfo = flashcardService.getServiceInfo();
 
-        return {
-            status: 'healthy',
-            service: 'flashcards-mcq',
-            flashcard_generator_ready: true,
-            mcq_generator_ready: true,
-            fastapi_service_healthy: fastapiServiceHealthy,
-            service_info: serviceInfo
-        };
-    });
-
-    // Get supported formats
-    fastify.get('/supported-formats', async () => {
-        const serviceInfo = flashcardService.getServiceInfo();
-
-        return {
-            input_formats: ['plain_text', 'long_text'],
-            max_text_length: 'No limit (handled by chunking)',
-            chunk_size: '400 words',
-            chunk_overlap: '50 words',
-            questions_per_chunk_range: [1, 10],
-            default_questions_per_chunk: 3,
-            features: serviceInfo.features,
-            fastapi_service_enabled: serviceInfo.use_fastapi_service,
-            fastapi_service_url: serviceInfo.fastapi_service_url
-        };
-    });
-
-    // Generate flashcards
     fastify.post('/', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const { text, total_questions, userId } = request.body as FlashcardRequest & { userId?: string };
@@ -80,7 +47,6 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
                 total_questions
             });
 
-            // Save generated flashcards to database
             const savedFlashcards = [];
             for (const flashcard of result.flashcards) {
                 try {
@@ -92,7 +58,6 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
                     savedFlashcards.push(savedFlashcard);
                 } catch (saveError) {
                     fastify.log.error('Error saving flashcard:', saveError);
-                    // Continue with other flashcards even if one fails
                 }
             }
 
@@ -111,74 +76,10 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // Generate and save flashcards (recommended workflow)
-    fastify.post('/generate-and-save', async (request: FastifyRequest<{ Body: FlashcardRequest }>, reply: FastifyReply) => {
-        try {
-            const { text, total_questions } = request.body;
-
-            if (!text || text.trim().length < 50) {
-                return reply.status(400).send({
-                    error: 'Text must be at least 50 characters long'
-                });
-            }
-
-            // Get user ID from auth
-            const authenticatedUserId = (request as any).user?.userId;
-            if (!authenticatedUserId) {
-                return reply.status(401).send({
-                    error: 'Authentication required'
-                });
-            }
-
-            const result = await flashcardService.generateFlashcards({
-                text: text.trim(),
-                total_questions
-            });
-
-            // Save generated flashcards to database
-            const savedFlashcards = [];
-            for (const flashcard of result.flashcards) {
-                try {
-                    const savedFlashcard = await sm2Service.createFlashcard({
-                        front: flashcard.question,
-                        back: flashcard.answer,
-                        userId: authenticatedUserId
-                    });
-                    savedFlashcards.push(savedFlashcard);
-                } catch (saveError) {
-                    fastify.log.error('Error saving flashcard:', saveError);
-                    // Continue with other flashcards even if one fails
-                }
-            }
-
-            return reply.send({
-                success: true,
-                data: {
-                    generated_flashcards: result.flashcards,
-                    saved_flashcards: savedFlashcards,
-                    total_generated: result.total_flashcards,
-                    total_saved: savedFlashcards.length,
-                    processing_method: result.processing_method
-                },
-                message: `Generated ${result.total_flashcards} flashcards and saved ${savedFlashcards.length} to database`
-            });
-        } catch (error) {
-            fastify.log.error('Error generating and saving flashcards:', error);
-            return reply.status(500).send({
-                success: false,
-                data: null,
-                error: 'Failed to generate and save flashcards',
-                details: error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    });
-
-    // Create a new flashcard
     fastify.post('/create', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const { front, back } = request.body as CreateFlashcard;
 
-            // Get user ID from auth (assuming you have auth middleware)
             const userId = (request as any).user?.userId;
             if (!userId) {
                 return reply.status(401).send({
@@ -207,13 +108,11 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // Review a flashcard (SM2 algorithm)
     fastify.post('/review/:id', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const { id } = request.params as { id: string };
             const { qualityScore } = request.body as ReviewRequest;
 
-            // Get user ID from auth
             const userId = (request as any).user?.userId;
             if (!userId) {
                 return reply.status(401).send({
@@ -240,10 +139,8 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // Get flashcards due for review
     fastify.get('/due', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            // Get user ID from auth
             const userId = (request as any).user?.userId;
             if (!userId) {
                 return reply.status(401).send({
@@ -270,10 +167,8 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // Get all flashcards for a user
     fastify.get('/user-flashcards', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            // Get user ID from auth
             const userId = (request as any).user?.userId;
             if (!userId) {
                 return reply.status(401).send({
@@ -304,10 +199,8 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
         }
     });
 
-    // Get flashcard statistics
     fastify.get('/stats', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            // Get user ID from auth
             const userId = (request as any).user?.userId;
             if (!userId) {
                 return reply.status(401).send({

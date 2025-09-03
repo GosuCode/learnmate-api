@@ -3,7 +3,6 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import { appConfig } from "./config";
 import registerRoutes from "./routes";
-import authPlugin from "./plugins/auth";
 
 const server = fastify({
   // Logger only for production
@@ -32,9 +31,7 @@ server.register(cors, {
 
 server.register(helmet);
 
-// Handle preflight requests globally
 server.addHook('onRequest', async (request, reply) => {
-  // Add CORS headers for all requests
   const origin = request.headers.origin;
   if (origin && appConfig.cors.origin.includes(origin)) {
     reply.header('Access-Control-Allow-Origin', origin);
@@ -53,36 +50,6 @@ server.addHook('onRequest', async (request, reply) => {
   }
 });
 
-// Handle empty JSON bodies for DELETE requests
-server.addHook('preValidation', async (request) => {
-  if (request.method === 'DELETE' && request.headers['content-type'] === 'application/json') {
-    // For DELETE requests with JSON content-type but no body, set an empty object
-    if (!request.body || Object.keys(request.body || {}).length === 0) {
-      (request as any).body = {};
-    }
-  }
-});
-
-// Configure content type parser for DELETE requests
-server.addContentTypeParser('application/json', { parseAs: 'string' }, function (req, body, done) {
-  try {
-    const bodyStr = body.toString();
-    if (req.method === 'DELETE' && (!bodyStr || bodyStr.trim() === '')) {
-      return done(null, {});
-    }
-    const json = JSON.parse(bodyStr);
-    done(null, json);
-  } catch (err) {
-    const error = err as Error;
-    (error as any).statusCode = 400;
-    done(error, undefined);
-  }
-});
-
-// Register authentication plugin
-server.register(authPlugin);
-
-// Register routes
 server.register(registerRoutes);
 
 export default server;
