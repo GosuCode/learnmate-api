@@ -1,7 +1,8 @@
 import axios from 'axios';
-import { FlashcardRequest, FlashcardResponse } from '@/types/flashcard';
+import { MCQRequest, MCQResponse } from '@/types/mcq';
 
-export class FlashcardService {
+
+export class MCQService {
     private fastapiServiceUrl: string;
 
     constructor() {
@@ -23,8 +24,8 @@ export class FlashcardService {
         }
     }
 
-    async generateFlashcards(request: FlashcardRequest): Promise<FlashcardResponse> {
-        return await this.callFastAPIService('/flashcards/generate', request);
+    async generateMCQs(request: MCQRequest): Promise<MCQResponse> {
+        return await this.callFastAPIService('/mcq/generate', request);
     }
 
     async checkFastAPIServiceHealth(): Promise<boolean> {
@@ -38,12 +39,12 @@ export class FlashcardService {
 
     getServiceInfo() {
         return {
-            service: 'Fastify Flashcard Service (FastAPI Integration)',
+            service: 'Fastify MCQ Service (FastAPI Integration)',
             fastapi_service_url: this.fastapiServiceUrl,
-            features: ['flashcards'],
+            features: ['mcqs'],
             use_fastapi_service: true
         };
     }
 }
 
-export const flashcardService = new FlashcardService();
+export const mcqService = new MCQService();

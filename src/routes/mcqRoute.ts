@@ -1,8 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { z } from "zod";
-import { flashcardService } from "@/services/flashcardService";
+import { mcqService } from "@/services/mcqService";
 
-// Request schema - maintain backward compatibility
 const MCQRequestSchema = z.object({
     text: z.string().min(50, 'Text must be at least 50 characters long'),
     num_questions: z.number().int().min(1).max(10).default(5)
@@ -21,7 +20,7 @@ export default async function mcqRoutes(app: FastifyInstance) {
                 });
             }
 
-            const result = await flashcardService.generateMCQs({
+            const result = await mcqService.generateMCQs({
                 text: text.trim(),
                 total_questions: num_questions
             });
@@ -49,29 +48,6 @@ export default async function mcqRoutes(app: FastifyInstance) {
                 error: 'Failed to generate MCQs',
                 details: error instanceof Error ? error.message : 'Unknown error'
             });
-        }
-    });
-
-    app.get("/health", async () => {
-        try {
-            const fastapiServiceHealthy = await flashcardService.checkFastAPIServiceHealth();
-            const serviceInfo = flashcardService.getServiceInfo();
-
-            return {
-                status: "healthy",
-                service: "Fastify MCQ Service (FastAPI Integration)",
-                flashcard_service: "available",
-                fastapi_service_healthy: fastapiServiceHealthy,
-                service_info: serviceInfo
-            };
-        } catch (err: any) {
-            return {
-                status: "degraded",
-                flashcard_service: "available",
-                python_service: "unavailable",
-                fallback_service: "available",
-                service: "Fastify MCQ Service (Unified) - Fallback Mode"
-            };
         }
     });
 }
