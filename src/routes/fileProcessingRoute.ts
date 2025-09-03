@@ -1,15 +1,17 @@
 import { FastifyInstance } from "fastify";
 import axios from "axios";
+import { summaryService } from "@/services/summaryService";
+import { titleService } from "@/services/titleService";
+import { authenticate } from '@/middleware/auth';
 
 export default async function fileProcessingRoutes(app: FastifyInstance) {
-    // Register multipart support
     await app.register(require("@fastify/multipart"), {
         limits: {
-            fileSize: 50 * 1024 * 1024, // 50MB limit
+            fileSize: 50 * 1024 * 1024,
         },
     });
 
-    app.post("/upload-and-summarize", async (request: any, reply: any) => {
+    app.post("/upload-and-summarize", { preHandler: authenticate }, async (request: any, reply: any) => {
         try {
             const data = await request.file();
 
@@ -27,10 +29,10 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
             const filename = data.filename;
             const mimetype = data.mimetype;
 
-            const maxLength = fields.max_length ? parseInt(fields.max_length as string) : 150;
+            const wordCount = fields.word_count ? parseInt(fields.word_count as string) : 100;
             const chunkSize = fields.chunk_size ? parseInt(fields.chunk_size as string) : 1000;
+            const title = fields.title ? fields.title as string : undefined;
 
-            // Read file buffer
             const chunks: Buffer[] = [];
             for await (const chunk of file) {
                 chunks.push(chunk);
@@ -40,7 +42,7 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
             const formData = new FormData();
             const blob = new Blob([buffer], { type: mimetype || 'application/octet-stream' });
             formData.append("file", blob, filename || "uploaded_file");
-            formData.append("max_length", maxLength.toString());
+            formData.append("word_count", wordCount.toString());
             formData.append("chunk_size", chunkSize.toString());
 
             const response = await axios.post(
@@ -50,11 +52,53 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
-                    timeout: 300000, // 5 minutes timeout for large files
+                    timeout: 300000,
                 }
             );
 
-            return reply.send(response.data);
+            const summaryData = response.data;
+
+            // Always save file summaries if user is authenticated
+            if (request.user?.userId) {
+                try {
+                    let finalTitle = title;
+                    if (!finalTitle) {
+                        const textForTitle = summaryData.cleaned_text || summaryData.original_text || '';
+                        finalTitle = await titleService.generateTitle(textForTitle);
+                    }
+
+                    const savedSummary = await summaryService.createSummary({
+                        title: finalTitle,
+                        originalText: summaryData.cleaned_text || summaryData.original_text || '',
+                        summary: summaryData.summary,
+                        wordCount: summaryData.word_count || wordCount,
+                        processingMethod: summaryData.processing_method || 'file_processing',
+                        userId: request.user.userId,
+                    });
+
+                    return reply.send({
+                        ...summaryData,
+                        saved: true,
+                        savedSummary: {
+                            id: savedSummary.id,
+                            title: savedSummary.title,
+                            createdAt: savedSummary.createdAt,
+                        },
+                    });
+                } catch (saveError) {
+                    console.error('Error saving file summary:', saveError);
+                    return reply.send({
+                        ...summaryData,
+                        saved: false,
+                        saveError: 'Failed to save summary',
+                    });
+                }
+            }
+
+            return reply.send({
+                ...summaryData,
+                saved: false,
+            });
         } catch (err: any) {
 
             if (err.code === "FST_FILES_LIMIT") {
@@ -86,7 +130,6 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
             const filename = data.filename;
             const mimetype = data.mimetype;
 
-            // Read file buffer
             const chunks: Buffer[] = [];
             for await (const chunk of file) {
                 chunks.push(chunk);
@@ -97,7 +140,6 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
             const blob = new Blob([buffer], { type: mimetype || 'application/octet-stream' });
             formData.append("file", blob, filename || "uploaded_file");
 
-            // Call FastAPI service
             const response = await axios.post(
                 "http://localhost:8000/api/v1/files/extract-text",
                 formData,
@@ -105,7 +147,7 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
-                    timeout: 120000, // 2 minutes timeout
+                    timeout: 120000,
                 }
             );
 
