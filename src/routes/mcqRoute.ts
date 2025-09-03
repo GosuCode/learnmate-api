@@ -11,7 +11,6 @@ const MCQRequestSchema = z.object({
 type MCQRequest = z.infer<typeof MCQRequestSchema>;
 
 export default async function mcqRoutes(app: FastifyInstance) {
-    // Generate MCQs using the unified flashcard service
     app.post("/", async (request: FastifyRequest<{ Body: MCQRequest }>, reply: FastifyReply) => {
         try {
             const { text, num_questions } = request.body;
@@ -22,14 +21,13 @@ export default async function mcqRoutes(app: FastifyInstance) {
                 });
             }
 
-            // Pass total_questions directly instead of chunking
             const result = await flashcardService.generateMCQs({
                 text: text.trim(),
-                total_questions: num_questions // New parameter
+                total_questions: num_questions
             });
 
-            // Transform response to match existing API format for backward compatibility
-            const transformedMcqs = result.mcqs.slice(0, num_questions).map(mcq => ({
+            const mcqs = result.mcqs || (result as any).questions || [];
+            const transformedMcqs = mcqs.slice(0, num_questions).map(mcq => ({
                 question: mcq.question,
                 options: mcq.options,
                 answer: mcq.correct_answer,
@@ -54,7 +52,6 @@ export default async function mcqRoutes(app: FastifyInstance) {
         }
     });
 
-    // Health check - now checks the unified service
     app.get("/health", async () => {
         try {
             const fastapiServiceHealthy = await flashcardService.checkFastAPIServiceHealth();

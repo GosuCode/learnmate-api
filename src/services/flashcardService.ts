@@ -62,7 +62,7 @@ export class FlashcardService {
 
     async generateFlashcards(request: FlashcardRequest): Promise<FlashcardResponse> {
         try {
-            return await this.callFastAPIService('/flashcards/flashcards', request);
+            return await this.callFastAPIService('/flashcards/generate', request);
         } catch (error) {
             console.log('Falling back to basic generation due to FastAPI service error');
             return this.generateBasicFlashcards(request.text, request.total_questions);
@@ -71,7 +71,7 @@ export class FlashcardService {
 
     async generateMCQs(request: MCQRequest): Promise<MCQResponse> {
         try {
-            return await this.callFastAPIService('/flashcards/mcqs', request);
+            return await this.callFastAPIService('/mcq/generate', request);
         } catch (error) {
             console.log('Falling back to basic generation due to FastAPI service error');
             return this.generateBasicMCQs(request.text, request.total_questions);

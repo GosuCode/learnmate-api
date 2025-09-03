@@ -11,11 +11,6 @@ const FlashcardRequestSchema = z.object({
     total_questions: z.number().int().min(1).max(10).default(3)
 });
 
-const MCQRequestSchema = z.object({
-    text: z.string().min(50, 'Text must be at least 50 characters long'),
-    total_questions: z.number().int().min(1).max(10).default(3)
-});
-
 const ReviewRequestSchema = z.object({
     qualityScore: z.number().int().min(0).max(5, 'Quality score must be between 0 and 5')
 });
@@ -26,7 +21,6 @@ const CreateFlashcardSchema = z.object({
 });
 
 type FlashcardRequest = z.infer<typeof FlashcardRequestSchema>;
-type MCQRequest = z.infer<typeof MCQRequestSchema>;
 type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
 type CreateFlashcard = z.infer<typeof CreateFlashcardSchema>;
 
@@ -64,7 +58,7 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
     });
 
     // Generate flashcards
-    fastify.post('/flashcards', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.post('/', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const { text, total_questions, userId } = request.body as FlashcardRequest & { userId?: string };
 
@@ -174,32 +168,6 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
                 success: false,
                 data: null,
                 error: 'Failed to generate and save flashcards',
-                details: error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    });
-
-    // Generate MCQs
-    fastify.post('/mcqs', async (request: FastifyRequest<{ Body: MCQRequest }>, reply: FastifyReply) => {
-        try {
-            const { text, total_questions } = request.body;
-
-            if (!text || text.trim().length < 50) {
-                return reply.status(400).send({
-                    error: 'Text must be at least 50 characters long'
-                });
-            }
-
-            const result = await flashcardService.generateMCQs({
-                text: text.trim(),
-                total_questions
-            });
-
-            return reply.send(result);
-        } catch (error) {
-            fastify.log.error('Error generating MCQs:', error);
-            return reply.status(500).send({
-                error: 'Failed to generate MCQs',
                 details: error instanceof Error ? error.message : 'Unknown error'
             });
         }
