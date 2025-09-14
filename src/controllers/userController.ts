@@ -10,7 +10,6 @@ export const userController = {
     try {
       const { email, name, password } = request.body;
 
-      // Validate input
       if (!email || !name || !password) {
         return reply.status(400).send({
           success: false,
@@ -27,7 +26,6 @@ export const userController = {
         });
       }
 
-      // Register user
       const authResponse = await userService.register({ email, name, password });
 
       const response: ApiResponse<AuthResponse> = {
@@ -58,7 +56,6 @@ export const userController = {
     try {
       const { email, password } = request.body;
 
-      // Validate input
       if (!email || !password) {
         return reply.status(400).send({
           success: false,
@@ -67,7 +64,6 @@ export const userController = {
         });
       }
 
-      // Login user
       const authResponse = await userService.login({ email, password });
 
       const response: ApiResponse<AuthResponse> = {
@@ -96,7 +92,6 @@ export const userController = {
 
   async getProfile(request: FastifyRequest, reply: FastifyReply) {
     try {
-      // Get user from JWT token (set by auth middleware)
       const user = (request as any).user;
 
       if (!user) {
@@ -158,4 +153,5 @@ export const userController = {
       });
     }
   },
+
 };

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { UserService } from '@/services/userService';
 
 export interface GoogleUserInfo {
-    sub: string; // Google ID
+    sub: string;
     email: string;
     name: string;
     picture?: string;
@@ -48,22 +48,18 @@ export class GoogleAuthService {
 
     async authenticateWithGoogle(idToken: string) {
         try {
-            // Verify the Google token
             const googleUser = await this.verifyGoogleToken(idToken);
 
-            // Check if user exists with this Google ID
             let user = await prisma.user.findUnique({
                 where: { googleId: googleUser.sub },
             });
 
             if (!user) {
-                // Check if user exists with this email (for linking accounts)
                 user = await prisma.user.findUnique({
                     where: { email: googleUser.email },
                 });
 
                 if (user) {
-                    // User exists but doesn't have Google ID - link the accounts
                     user = await prisma.user.update({
                         where: { id: user.id },
                         data: {
@@ -74,7 +70,6 @@ export class GoogleAuthService {
                         },
                     });
                 } else {
-                    // Create new user with Google OAuth
                     user = await prisma.user.create({
                         data: {
                             email: googleUser.email,
@@ -88,7 +83,6 @@ export class GoogleAuthService {
                 }
             }
 
-            // Generate JWT token for the user
             const token = this.userService.generateToken(user.id, user.email);
 
             return {

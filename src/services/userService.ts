@@ -8,7 +8,6 @@ export class UserService {
   async register(userData: CreateUserRequest): Promise<AuthResponse> {
     const { email, name, password } = userData;
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -17,10 +16,8 @@ export class UserService {
       throw new Error('User already exists with this email');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user in database
     const newUser = await prisma.user.create({
       data: {
         email,
@@ -29,8 +26,7 @@ export class UserService {
       }
     });
 
-    // Generate JWT token
-    const token = await this.generateToken(newUser.id, newUser.email);
+    const token = this.generateToken(newUser.id, newUser.email);
 
     return {
       user: {
@@ -50,7 +46,6 @@ export class UserService {
   async login(loginData: LoginRequest): Promise<AuthResponse> {
     const { email, password } = loginData;
 
-    // Find user in database
     const user = await prisma.user.findUnique({
       where: { email }
     });
@@ -59,7 +54,6 @@ export class UserService {
       throw new Error('Invalid email or password');
     }
 
-    // Verify password
     if (!user.password) {
       throw new Error('Invalid email or password');
     }
@@ -69,8 +63,7 @@ export class UserService {
       throw new Error('Invalid email or password');
     }
 
-    // Generate JWT token
-    const token = await this.generateToken(user.id, user.email);
+    const token = this.generateToken(user.id, user.email);
 
     return {
       user: {
@@ -147,7 +140,7 @@ export class UserService {
     try {
       const decoded = jwt.verify(token, appConfig.jwt.secret) as any;
       return {
-        userId: decoded.userId || decoded.id, // Handle both userId and id
+        userId: decoded.userId || decoded.id,
         email: decoded.email,
       };
     } catch (error) {
@@ -156,7 +149,7 @@ export class UserService {
     }
   }
 
-  public async generateToken(userId: string, email: string): Promise<string> {
+  public generateToken(userId: string, email: string): string {
     const payload = {
       userId: userId,
       email: email,

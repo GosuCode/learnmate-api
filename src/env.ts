@@ -10,6 +10,10 @@ const envSchema = z.object({
     DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
     OPENAI_API_KEY: z.string().optional(),
     GEMINI_API_KEY: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    BASE_URL: z.string().default('http://localhost:9000'),
+    FRONTEND_URL: z.string().default('http://localhost:3000'),
 });
 
 export const env = envSchema.parse(process.env); 
