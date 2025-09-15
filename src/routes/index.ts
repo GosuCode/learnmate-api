@@ -8,6 +8,7 @@ import contentRoutes from './contentRoute';
 import summarizeRoutes from './summarizeRoute';
 import mcqRoutes from './mcqRoute';
 import quizRoutes from './quizRoute';
+import bcaReportRoutes from './bcaReportRoute';
 import fileProcessingRoutes from './fileProcessingRoute';
 import flashcardRoutes from './flashcardRoute';
 
@@ -21,6 +22,7 @@ export default async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(summarizeRoutes, { prefix: '/api/summarize' });
   await fastify.register(mcqRoutes, { prefix: '/api/mcq' });
   await fastify.register(quizRoutes, { prefix: '/api/quizzes' });
+  await fastify.register(bcaReportRoutes, { prefix: '/api/bca-reports' });
   await fastify.register(fileProcessingRoutes, { prefix: '/api/files' });
   await fastify.register(flashcardRoutes, { prefix: '/api/flashcards' });
 }

@@ -1,0 +1,36 @@
+{
+  "project_proposal": {
+    "sections": [
+      { "key": "introduction", "name": "Introduction", "order": 1, "independent": false },
+      { "key": "problem_statement", "name": "Problem Statement", "order": 2, "independent": false },
+      { "key": "objectives", "name": "Objectives", "order": 3, "independent": false },
+      { "key": "methodology", "name": "Methodology", "order": 4, "independent": false },
+      { "key": "gantt_chart", "name": "Gantt Chart", "order": 5, "independent": false },
+      { "key": "expected_outcome", "name": "Expected Outcome", "order": 6, "independent": false },
+      { "key": "references", "name": "References", "order": 7, "independent": true }
+    ]
+  },
+  "main_report": {
+    "sections": [
+      { "key": "abstract", "name": "Abstract", "order": 1, "independent": true },
+      { "key": "acknowledgement", "name": "Acknowledgement", "order": 2, "independent": true },
+      { "key": "introduction", "name": "Chapter 1: Introduction", "order": 3, "independent": false },
+      { "key": "background_study", "name": "Chapter 2: Background Study and Literature Review", "order": 4, "independent": false },
+      { "key": "system_analysis", "name": "Chapter 3: System Analysis and Design", "order": 5, "independent": false },
+      { "key": "implementation", "name": "Chapter 4: Implementation and Testing", "order": 6, "independent": false },
+      { "key": "conclusion", "name": "Chapter 5: Conclusion and Future Recommendations", "order": 7, "independent": false },
+      { "key": "references", "name": "References", "order": 8, "independent": true }
+    ]
+  },
+  "minor_project": {
+    "sections": [
+      { "key": "introduction", "name": "Introduction", "order": 1, "independent": false },
+      { "key": "literature_review", "name": "Literature Review", "order": 2, "independent": false },
+      { "key": "system_analysis", "name": "System Analysis", "order": 3, "independent": false },
+      { "key": "implementation", "name": "Implementation", "order": 4, "independent": false },
+      { "key": "testing", "name": "Testing and Results", "order": 5, "independent": false },
+      { "key": "conclusion", "name": "Conclusion", "order": 6, "independent": false },
+      { "key": "references", "name": "References", "order": 7, "independent": true }
+    ]
+  }
+}
