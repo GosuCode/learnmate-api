@@ -11,6 +11,7 @@ import quizRoutes from './quizRoute';
 import bcaReportRoutes from './bcaReportRoute';
 import fileProcessingRoutes from './fileProcessingRoute';
 import flashcardRoutes from './flashcardRoute';
+import groupRoutes from './groupRoute';
 
 export default async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(healthCheckRoute, { prefix: '/api' });
@@ -25,4 +26,5 @@ export default async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(bcaReportRoutes, { prefix: '/api/bca-reports' });
   await fastify.register(fileProcessingRoutes, { prefix: '/api/files' });
   await fastify.register(flashcardRoutes, { prefix: '/api/flashcards' });
+  await fastify.register(groupRoutes, { prefix: '/api/groups' });
 }

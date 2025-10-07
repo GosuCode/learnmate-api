@@ -9,6 +9,7 @@ export interface CreateQuizData {
     totalQuestions: number;
     processingMethod: string;
     userId: string;
+    groupId?: string;
 }
 
 export interface UpdateQuizData {
@@ -26,6 +27,13 @@ export class QuizService {
                         id: true,
                         name: true,
                         email: true,
+                    },
+                },
+                group: {
+                    select: {
+                        id: true,
+                        name: true,
+                        color: true,
                     },
                 },
             },
@@ -46,16 +54,28 @@ export class QuizService {
                         email: true,
                     },
                 },
+                group: {
+                    select: {
+                        id: true,
+                        name: true,
+                        color: true,
+                    },
+                },
             },
         });
     }
 
-    async getUserQuizzes(userId: string, page: number = 1, limit: number = 10) {
+    async getUserQuizzes(userId: string, page: number = 1, limit: number = 10, groupId?: string) {
         const skip = (page - 1) * limit;
+
+        const whereClause: any = { userId };
+        if (groupId) {
+            whereClause.groupId = groupId;
+        }
 
         const [quizzes, total] = await Promise.all([
             prisma.quiz.findMany({
-                where: { userId },
+                where: whereClause,
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,
@@ -67,10 +87,17 @@ export class QuizService {
                             email: true,
                         },
                     },
+                    group: {
+                        select: {
+                            id: true,
+                            name: true,
+                            color: true,
+                        },
+                    },
                 },
             }),
             prisma.quiz.count({
-                where: { userId },
+                where: whereClause,
             }),
         ]);
 
@@ -104,18 +131,23 @@ export class QuizService {
         });
     }
 
-    async searchQuizzes(userId: string, query: string, page: number = 1, limit: number = 10) {
+    async searchQuizzes(userId: string, query: string, page: number = 1, limit: number = 10, groupId?: string) {
         const skip = (page - 1) * limit;
+
+        const whereClause: any = {
+            userId,
+            OR: [
+                { title: { contains: query, mode: 'insensitive' } },
+                { originalText: { contains: query, mode: 'insensitive' } },
+            ],
+        };
+        if (groupId) {
+            whereClause.groupId = groupId;
+        }
 
         const [quizzes, total] = await Promise.all([
             prisma.quiz.findMany({
-                where: {
-                    userId,
-                    OR: [
-                        { title: { contains: query, mode: 'insensitive' } },
-                        { originalText: { contains: query, mode: 'insensitive' } },
-                    ],
-                },
+                where: whereClause,
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,
@@ -127,16 +159,17 @@ export class QuizService {
                             email: true,
                         },
                     },
+                    group: {
+                        select: {
+                            id: true,
+                            name: true,
+                            color: true,
+                        },
+                    },
                 },
             }),
             prisma.quiz.count({
-                where: {
-                    userId,
-                    OR: [
-                        { title: { contains: query, mode: 'insensitive' } },
-                        { originalText: { contains: query, mode: 'insensitive' } },
-                    ],
-                },
+                where: whereClause,
             }),
         ]);
 

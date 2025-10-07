@@ -24,6 +24,7 @@ model User {
   summaries  Summary[]
   quizzes    Quiz[]
   bcaReports BCAReport[]
+  groups     Group[]
 
   @@map("users")
 }
@@ -88,14 +89,17 @@ model Flashcard {
   lastReviewed DateTime @default(now())
   nextReview   DateTime @default(now())
   userId       String
+  groupId      String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user  User   @relation(fields: [userId], references: [id])
+  group Group? @relation(fields: [groupId], references: [id])
 
   @@index([userId])
   @@index([nextReview])
   @@index([userId, nextReview])
+  @@index([groupId])
   @@map("flashcards")
 }
 
@@ -132,13 +136,16 @@ model Quiz {
   totalQuestions   Int
   processingMethod String
   userId           String
+  groupId          String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user  User   @relation(fields: [userId], references: [id])
+  group Group? @relation(fields: [groupId], references: [id])
 
   @@index([userId])
   @@index([createdAt])
+  @@index([groupId])
   @@map("quizzes")
 }
 
@@ -157,6 +164,23 @@ model BCAReport {
   @@index([userId])
   @@index([createdAt])
   @@map("bca_reports")
+}
+
+model Group {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  color       String?     @default("#3B82F6")
+  userId      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id])
+  flashcards Flashcard[]
+  quizzes    Quiz[]
+
+  @@index([userId])
+  @@map("groups")
 }
 
 enum BlockType {

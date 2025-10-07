@@ -4,6 +4,7 @@ interface CreateFlashcardRequest {
     front: string;
     back: string;
     userId: string;
+    groupId?: string;
 }
 
 interface FlashcardStats {
@@ -21,6 +22,7 @@ export class SM2Service {
                 front: data.front,
                 back: data.back,
                 userId: data.userId,
+                groupId: data.groupId,
                 interval: 0,
                 repetition: 0,
                 easeFactor: 2.5,

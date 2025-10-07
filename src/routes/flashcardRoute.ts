@@ -16,12 +16,18 @@ const ReviewRequestSchema = z.object({
 
 const CreateFlashcardSchema = z.object({
     front: z.string().min(1, 'Front text is required'),
-    back: z.string().min(1, 'Back text is required')
+    back: z.string().min(1, 'Back text is required'),
+    groupId: z.string().optional()
+});
+
+const UpdateFlashcardSchema = z.object({
+    groupId: z.string().optional()
 });
 
 type FlashcardRequest = z.infer<typeof FlashcardRequestSchema>;
 type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
 type CreateFlashcard = z.infer<typeof CreateFlashcardSchema>;
+type UpdateFlashcard = z.infer<typeof UpdateFlashcardSchema>;
 
 export default async function flashcardRoutes(fastify: FastifyInstance) {
 
@@ -78,7 +84,7 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
 
     fastify.post('/create', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const { front, back } = request.body as CreateFlashcard;
+            const { front, back, groupId } = request.body as CreateFlashcard;
 
             const userId = (request as any).user?.userId;
             if (!userId) {
@@ -87,10 +93,24 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
                 });
             }
 
+            // Validate groupId if provided
+            if (groupId) {
+                const group = await prisma.group.findFirst({
+                    where: { id: groupId, userId }
+                });
+                if (!group) {
+                    return reply.status(400).send({
+                        success: false,
+                        error: 'Group not found or access denied'
+                    });
+                }
+            }
+
             const flashcard = await sm2Service.createFlashcard({
                 front,
                 back,
-                userId
+                userId,
+                groupId
             });
 
             return reply.send({
@@ -178,9 +198,25 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
                 });
             }
 
+            const { groupId } = request.query as { groupId?: string };
+
+            const whereClause: any = { userId };
+            if (groupId) {
+                whereClause.groupId = groupId;
+            }
+
             const flashcards = await prisma.flashcard.findMany({
-                where: { userId },
-                orderBy: { createdAt: 'desc' }
+                where: whereClause,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    group: {
+                        select: {
+                            id: true,
+                            name: true,
+                            color: true
+                        }
+                    }
+                }
             });
 
             return reply.send({
@@ -265,6 +301,55 @@ export default async function flashcardRoutes(fastify: FastifyInstance) {
                 success: false,
                 error: 'Failed to delete flashcard',
                 details: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    });
+
+    // Update flashcard group assignment
+    fastify.put('/:id', { preHandler: authenticate }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const { id } = request.params as { id: string };
+            const { groupId } = request.body as UpdateFlashcard;
+            const userId = (request as any).user?.userId;
+
+            if (!userId) {
+                return reply.status(401).send({
+                    success: false,
+                    error: 'Authentication required'
+                });
+            }
+
+            // Verify flashcard belongs to user
+            const flashcard = await prisma.flashcard.findFirst({
+                where: { id, userId }
+            });
+
+            if (!flashcard) {
+                return reply.status(404).send({
+                    success: false,
+                    error: 'Flashcard not found or access denied'
+                });
+            }
+
+            // Update the flashcard
+            const updatedFlashcard = await prisma.flashcard.update({
+                where: { id },
+                data: { groupId: groupId || null },
+                include: {
+                    group: true
+                }
+            });
+
+            return reply.send({
+                success: true,
+                data: updatedFlashcard,
+                message: 'Flashcard updated successfully'
+            });
+        } catch (error) {
+            fastify.log.error('Error updating flashcard:', error);
+            return reply.status(500).send({
+                success: false,
+                error: 'Failed to update flashcard'
             });
         }
     });

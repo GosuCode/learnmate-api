@@ -10,8 +10,9 @@ export default async function quizRoutes(app: FastifyInstance) {
                 const user = (request as any).user;
                 const page = parseInt((request.query as any).page) || 1;
                 const limit = parseInt((request.query as any).limit) || 10;
+                const groupId = (request.query as any).groupId;
 
-                const result = await quizService.getUserQuizzes(user.userId, page, limit);
+                const result = await quizService.getUserQuizzes(user.userId, page, limit, groupId);
 
                 return reply.send({
                     success: true,
