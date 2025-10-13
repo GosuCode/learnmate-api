@@ -22,7 +22,7 @@
     "@fastify/multipart": "^9.0.3",
     "@fastify/oauth2": "^8.1.2",
     "@google/generative-ai": "^0.24.1",
-    "@prisma/client": "^6.11.1",
+    "@prisma/client": "^6.17.1",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.4",
