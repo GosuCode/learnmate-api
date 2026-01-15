@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import axios from "axios";
+import FormData from "form-data";
 import { summaryService } from "@/services/summaryService";
 import { titleService } from "@/services/titleService";
 import { authenticate } from '@/middleware/auth';
@@ -40,8 +41,10 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
             const buffer = Buffer.concat(chunks);
 
             const formData = new FormData();
-            const blob = new Blob([buffer], { type: mimetype || 'application/octet-stream' });
-            formData.append("file", blob, filename || "uploaded_file");
+            formData.append("file", buffer, {
+                filename: filename || "uploaded_file",
+                contentType: mimetype || "application/octet-stream",
+            });
             formData.append("word_count", wordCount.toString());
             formData.append("chunk_size", chunkSize.toString());
 
@@ -49,9 +52,7 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
                 "http://localhost:8000/api/v1/files/upload-and-summarize",
                 formData,
                 {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                    headers: formData.getHeaders(),
                     timeout: 300000,
                 }
             );
@@ -137,16 +138,16 @@ export default async function fileProcessingRoutes(app: FastifyInstance) {
             const buffer = Buffer.concat(chunks);
 
             const formData = new FormData();
-            const blob = new Blob([buffer], { type: mimetype || 'application/octet-stream' });
-            formData.append("file", blob, filename || "uploaded_file");
+            formData.append("file", buffer, {
+                filename: filename || "uploaded_file",
+                contentType: mimetype || "application/octet-stream",
+            });
 
             const response = await axios.post(
                 "http://localhost:8000/api/v1/files/extract-text",
                 formData,
                 {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                    headers: formData.getHeaders(),
                     timeout: 120000,
                 }
             );

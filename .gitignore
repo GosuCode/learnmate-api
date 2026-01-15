@@ -4,7 +4,6 @@ node_modules
 .cursor
 .env
 /src/generated/prisma
-.env.example
 
 # Logs
 logs
